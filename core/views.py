@@ -16,9 +16,33 @@ from django.shortcuts import render,get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from .models import Profile
+from rest_framework.parsers import MultiPartParser, FormParser
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CustomRegisterView(RegisterView):
+    parser_classes = [MultiPartParser, FormParser]
     serializer_class = CustomRegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save(request)
+                return Response({
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                }, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error in registration: {e}")
+            return Response({"detail": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class VolunteerWorkViewSet(viewsets.ModelViewSet):

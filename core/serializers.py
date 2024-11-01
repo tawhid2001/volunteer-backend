@@ -9,7 +9,7 @@ import requests
 class CustomRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    profile_picture = serializers.URLField(required=False, allow_null=True)  # Now expecting a URL
+    profile_picture = serializers.URLField(required=False, allow_null=True)
     bio = serializers.CharField(required=False, allow_null=True)
     contact_info = serializers.CharField(required=False, allow_null=True)
 
@@ -17,45 +17,26 @@ class CustomRegisterSerializer(RegisterSerializer):
         data = super().get_cleaned_data()
         data['first_name'] = self.validated_data.get('first_name', '')
         data['last_name'] = self.validated_data.get('last_name', '')
-        data['profile_picture'] = self.validated_data.get('profile_picture', None)  # URL from the frontend
+        data['profile_picture'] = self.validated_data.get('profile_picture', None)
         data['bio'] = self.validated_data.get('bio', '')
         data['contact_info'] = self.validated_data.get('contact_info', '')
         return data
 
     def save(self, request):
-        # Save the user first
         user = super().save(request)
-        user.first_name = self.cleaned_data.get('first_name')
-        user.last_name = self.cleaned_data.get('last_name')
+        user.first_name = self.cleaned_data.get('first_name', '')
+        user.last_name = self.cleaned_data.get('last_name', '')
         user.save()
 
-        # Check if profile picture URL is valid
-        profile_picture_url = self.cleaned_data.get('profile_picture')
-        if profile_picture_url:
-            try:
-                response = requests.head(profile_picture_url)
-                if response.status_code != 200:
-                    profile_picture_url = None  # Invalidate the URL if it doesn't exist
-            except requests.exceptions.RequestException:
-                profile_picture_url = None  # Handle connection errors
+        Profile.objects.create(
+            user=user,
+            bio=self.cleaned_data.get('bio', ''),
+            contact_info=self.cleaned_data.get('contact_info', ''),
+            profile_picture=self.cleaned_data.get('profile_picture')
+        )
 
-        try:
-            profile = Profile.objects.create(
-                user=user,
-                bio=self.cleaned_data.get('bio'),
-                contact_info=self.cleaned_data.get('contact_info'),
-                profile_picture=profile_picture_url
-            )
-            print(f"Profile created for user: {profile.user.username}")
-        except Exception as e:
-            print(f"Error creating profile: {e}")
-
-        # Generate an auth token for the user after profile creation
         Token.objects.create(user=user)
-
-        # Send welcome email
         send_welcome_email(user.email, user.first_name)
-
         return user
 
 class ReviewSerializer(serializers.ModelSerializer):
