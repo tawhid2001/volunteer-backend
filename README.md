@@ -18,7 +18,7 @@
 
 ## Live Demo
 
-You can access the live backend API here: [Volunteer Hub Live](https://volunteerhub-backend-zlno.onrender.com/)
+You can access the live backend API here: [Volunteer Hub Live](https://volunteer-backend-xi.vercel.app/)
 
 ## Important URLs and Endpoints
 
