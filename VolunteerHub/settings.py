@@ -62,7 +62,7 @@ INSTALLED_APPS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://volunteerhub-backend-zlno.onrender.com",
+    "https://volunteer-backend-xi.vercel.app/",
     "http://127.0.0.1:8000",
     'http://127.0.0.1:5500',
     'http://localhost:5500',
@@ -194,5 +194,5 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = env("EMAIL")
 EMAIL_HOST_PASSWORD = env("EMAIL_PASSWORD")
-SITE_URL = 'https://volunteerhub-backend-zlno.onrender.com' 
+SITE_URL = 'https://volunteer-backend-xi.vercel.app/' 
 SITE_ID=1
