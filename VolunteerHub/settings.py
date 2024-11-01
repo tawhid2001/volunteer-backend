@@ -59,17 +59,6 @@ INSTALLED_APPS = [
 ]
 
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://volunteer-backend-xi.vercel.app",
-    "http://127.0.0.1:8000",
-    'http://127.0.0.1:5500',
-    'http://localhost:5500',
-    'https://tawhid2001.github.io',
-]
-
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -92,6 +81,19 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 )
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://volunteer-backend-xi.vercel.app",
+    "http://127.0.0.1:8000",
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'https://tawhid2001.github.io',
+]
+
+
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
