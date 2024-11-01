@@ -4,6 +4,7 @@ from dj_rest_auth.registration.serializers import RegisterSerializer
 from rest_framework.authtoken.models import Token
 from django.core.mail import send_mail
 from django.conf import settings
+import requests
 
 class CustomRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
@@ -27,6 +28,16 @@ class CustomRegisterSerializer(RegisterSerializer):
         user.first_name = self.cleaned_data.get('first_name')
         user.last_name = self.cleaned_data.get('last_name')
         user.save()
+
+        # Check if profile picture URL is valid
+        profile_picture_url = self.cleaned_data.get('profile_picture')
+        if profile_picture_url:
+            try:
+                response = requests.head(profile_picture_url)
+                if response.status_code != 200:
+                    profile_picture_url = None  # Invalidate the URL if it doesn't exist
+            except requests.exceptions.RequestException:
+                profile_picture_url = None  # Handle connection errors
 
         # Create Profile with the provided URL
         Profile.objects.create(
