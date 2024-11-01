@@ -39,13 +39,16 @@ class CustomRegisterSerializer(RegisterSerializer):
             except requests.exceptions.RequestException:
                 profile_picture_url = None  # Handle connection errors
 
-        # Create Profile with the provided URL
-        Profile.objects.create(
-            user=user,
-            bio=self.cleaned_data.get('bio'),
-            contact_info=self.cleaned_data.get('contact_info'),
-            profile_picture=self.cleaned_data.get('profile_picture')  # Save URL directly
-        )
+        try:
+            profile = Profile.objects.create(
+                user=user,
+                bio=self.cleaned_data.get('bio'),
+                contact_info=self.cleaned_data.get('contact_info'),
+                profile_picture=profile_picture_url
+            )
+            print(f"Profile created for user: {profile.user.username}")
+        except Exception as e:
+            print(f"Error creating profile: {e}")
 
         # Generate an auth token for the user after profile creation
         Token.objects.create(user=user)
