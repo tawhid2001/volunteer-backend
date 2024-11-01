@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 import requests
 
+
 class CustomRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -24,20 +25,33 @@ class CustomRegisterSerializer(RegisterSerializer):
 
     def save(self, request):
         user = super().save(request)
-        user.first_name = self.cleaned_data.get('first_name', '')
-        user.last_name = self.cleaned_data.get('last_name', '')
+        user.first_name = self.validated_data.get('first_name', '')
+        user.last_name = self.validated_data.get('last_name', '')
         user.save()
 
-        Profile.objects.create(
+        # Creating or retrieving profile associated with the user
+        profile, created = Profile.objects.get_or_create(
             user=user,
-            bio=self.cleaned_data.get('bio', ''),
-            contact_info=self.cleaned_data.get('contact_info', ''),
-            profile_picture=self.cleaned_data.get('profile_picture')
+            defaults={
+                "bio": self.validated_data.get('bio', ''),
+                "contact_info": self.validated_data.get('contact_info', ''),
+                "profile_picture": self.validated_data.get('profile_picture')
+            }
         )
 
+        # Debugging info
+        if created:
+            print("Profile created successfully.")
+        else:
+            print("Profile already exists for this user.")
+
+        # Token creation and welcome email
         Token.objects.create(user=user)
         send_welcome_email(user.email, user.first_name)
         return user
+
+
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
