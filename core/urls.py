@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import VolunteerWorkViewSet, ReviewViewSet,UserListView,JoinRequestViewSet,CategoryViewSet,CategoryworklistViewSet,has_reviewed,UserEditView,UserDetailViewById
+from .views import VolunteerWorkViewSet, ReviewViewSet,UserListView,JoinRequestViewSet,CategoryViewSet,CategoryworklistViewSet,has_reviewed,UserEditView,UserDetailViewById,UserProfileRegisterView
 
 router = DefaultRouter()
 router.register('volunteer-work', VolunteerWorkViewSet)
@@ -18,4 +18,5 @@ urlpatterns = [
     path('auth/user/edit/', UserEditView.as_view(), name='user-edit'),
     path('list/<slug:slug>/',CategoryworklistViewSet.as_view(), name='category-work-list'),
     path('volunteer-work/<int:volunteer_work_id>/has-reviewed/', has_reviewed, name='has-reviewed'),
+    path('register/', UserProfileRegisterView.as_view(), name='user-profile-register'),
 ]

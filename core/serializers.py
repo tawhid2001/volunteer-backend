@@ -5,6 +5,9 @@ from rest_framework.authtoken.models import Token
 from django.core.mail import send_mail
 from django.conf import settings
 import requests
+from rest_framework.exceptions import ValidationError
+import logging
+logger = logging.getLogger(__name__)
 
 
 class CustomRegisterSerializer(RegisterSerializer):
@@ -24,34 +27,69 @@ class CustomRegisterSerializer(RegisterSerializer):
         return data
 
     def save(self, request):
-        user = super().save(request)
-        user.first_name = self.validated_data.get('first_name', '')
-        user.last_name = self.validated_data.get('last_name', '')
-        user.save()
+        try:
+            user = super().save(request)
+            user.first_name = self.validated_data.get('first_name', '')
+            user.last_name = self.validated_data.get('last_name', '')
+            user.save()
 
-        # Creating or retrieving profile associated with the user
-        profile, created = Profile.objects.get_or_create(
-            user=user,
-            defaults={
-                "bio": self.validated_data.get('bio', ''),
-                "contact_info": self.validated_data.get('contact_info', ''),
-                "profile_picture": self.validated_data.get('profile_picture')
-            }
+            profile, created = Profile.objects.get_or_create(
+                user=user,
+                defaults={
+                    "bio": self.validated_data.get('bio', ''),
+                    "contact_info": self.validated_data.get('contact_info', ''),
+                    "profile_picture": self.validated_data.get('profile_picture')
+                }
+            )
+            print("profile created", profile)
+            profile.save()
+
+            logger.info("Profile creation status: %s", "Created" if created else "Already exists")
+
+            # Token and email
+            Token.objects.create(user=user)
+            send_welcome_email(user.email, user.first_name)
+            return user
+        except Exception as e:
+            logger.error("Error during registration: %s", str(e))
+            raise ValidationError("An error occurred during registration.")
+    
+
+class UserProfileRegisterSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    profile_picture = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+    contact_info = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    password1 = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2', 'bio', 'profile_picture', 'contact_info']
+
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Passwords must match."})
+        return attrs
+
+    def create(self, validated_data):
+        # Remove password1 and password2 to get the actual password
+        validated_data.pop('password2')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password1']  # Use password1 here
         )
 
-        # Debugging info
-        if created:
-            print("Profile created successfully.")
-        else:
-            print("Profile already exists for this user.")
+        # Create profile linked to the user
+        Profile.objects.create(
+            user=user,
+            bio=validated_data.pop('bio', ''),
+            profile_picture=validated_data.pop('profile_picture', None),
+            contact_info=validated_data.pop('contact_info', '')
+        )
 
-        # Token creation and welcome email
-        Token.objects.create(user=user)
-        send_welcome_email(user.email, user.first_name)
         return user
-
-
-
+    
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)

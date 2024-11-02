@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from .permissions import IsOrganizerOrReadOnly,IsOrganizer
 from dj_rest_auth.registration.views import RegisterView
 from rest_framework.views import APIView
-from .serializers import CustomRegisterSerializer,CustomUserSerializer
+from .serializers import CustomRegisterSerializer,CustomUserSerializer,UserProfileRegisterSerializer
 from django.contrib.auth.models import User
 from rest_framework import generics
 from rest_framework import status
@@ -20,6 +20,18 @@ from .models import Profile
 
 class CustomRegisterView(RegisterView):
     serializer_class = CustomRegisterSerializer
+
+class UserProfileRegisterView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request, *args, **kwargs):
+        serializer = UserProfileRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {"message": "User registered successfully"},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VolunteerWorkViewSet(viewsets.ModelViewSet):
