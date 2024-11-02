@@ -61,10 +61,12 @@ class UserProfileRegisterSerializer(serializers.ModelSerializer):
     contact_info = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(required=True)  # Add this line
+    last_name = serializers.CharField(required=True)   # Add this line
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2', 'bio', 'profile_picture', 'contact_info']
+        fields = ['username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'bio', 'profile_picture', 'contact_info']
 
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:
@@ -77,7 +79,9 @@ class UserProfileRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password1']  # Use password1 here
+            password=validated_data['password1'],  # Use password1 here
+            first_name=validated_data['first_name'],  # Set first name
+            last_name=validated_data['last_name']     # Set last name
         )
 
         # Create profile linked to the user
@@ -89,7 +93,6 @@ class UserProfileRegisterSerializer(serializers.ModelSerializer):
         )
 
         return user
-    
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
