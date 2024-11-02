@@ -94,6 +94,8 @@ class UserProfileRegisterSerializer(serializers.ModelSerializer):
 
         return user
 
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     rating_display = serializers.SerializerMethodField()
